@@ -1,149 +1,162 @@
-# ViGoEmotions: multi-label Vietnamese emotion recognition and threshold decoding
+# Is one threshold enough? Decision thresholds for multi-label Vietnamese emotion recognition
 
-Advanced Topics in Information Technology, class 62FIT4ATI-CLC02, Group 02, Project P02.
+Course project for Advanced Topics in Information Technology at Hanoi University (class 62FIT4ATI-CLC02, group 02,
+project P02).
 
 | Member | Student ID |
 |---|---|
-| Nguyễn Đức Hiếu (submitter) | 2301140034 |
+| Nguyễn Đức Hiếu | 2301140034 |
 | Nguyễn Minh Hiền | 2301140032 |
 | Trần Thị Kim Oanh | 2301140071 |
 
-GitHub repository: <https://github.com/Heal1208/vigoemotions-threshold-decoding>
+## What we did
 
-## What is in this project
+[ViGoEmotions](https://github.com/ricardo-tran/ViGoEmotions) has 20,664 Vietnamese social-media comments. Each one
+carries one or more of 27 emotions, or `neutral`, so a model has to make 28 yes/no decisions per comment. The labels
+are imbalanced, and that raises a question most multi-label code skips: is 0.5 the right cut-off for every sigmoid
+output?
 
-The midterm compares three baselines on ViGoEmotions (20,664 Vietnamese social-media comments, 27 emotions plus
-`neutral`, 28 labels). The final part answers the required research question, RQ1: is one uniform decision threshold
-of 0.5 the right choice for every label when the labels are imbalanced? We keep the midterm PhoBERT model fixed and
-compare three ways of turning its probabilities into labels.
+The project has two parts.
 
-Test results (Macro-F1 over 28 labels):
+1. **Midterm.** Dataset analysis and three baselines on the official split: TF-IDF with one-vs-rest logistic
+   regression, a BiLSTM and PhoBERT-base-v2.
+2. **Final (RQ1).** We freeze the midterm PhoBERT and compare three ways to turn its probabilities into labels:
+   `fixed` (0.5 for every label), `global` (one threshold tuned on validation) and `per_label` (one threshold per
+   label tuned on validation). Thresholds never see the test split.
 
-| | Macro-F1 | Micro-F1 | Hamming loss |
+## Results
+
+Test split, 28 labels:
+
+| Model and decoding | Macro-F1 | Micro-F1 | Hamming loss |
 |---|---|---|---|
 | TF-IDF + OvR logistic regression, τ = 0.5 | 0.5365 | 0.5546 | 0.0663 |
 | BiLSTM, τ = 0.5 | 0.4892 | 0.5156 | 0.0618 |
-| PhoBERT-base-v2, τ = 0.5 (`fixed`) | 0.5671 | 0.6051 | 0.0481 |
-| PhoBERT-base-v2, one threshold tuned on validation (`global`, τ* = 0.31) | 0.5958 | 0.6161 | 0.0550 |
-| PhoBERT-base-v2, one threshold per label tuned on validation (`per_label`) | 0.6010 | 0.6131 | 0.0575 |
+| PhoBERT-base-v2, `fixed` (τ = 0.5) | 0.5671 | 0.6051 | **0.0481** |
+| PhoBERT-base-v2, `global` (τ* = 0.31) | 0.5958 | **0.6161** | 0.0550 |
+| PhoBERT-base-v2, `per_label` (τ_c* from 0.14 to 0.64) | **0.6010** | 0.6131 | 0.0575 |
 
-Sources: `results/tables/midterm_main_metrics.csv` and `results/tables/rq1_table_main_metrics.csv`.
+What we found:
 
-## Folder layout
+- 0.5 is too high. Tuned on validation, 26 of the 28 per-label thresholds land below 0.5, and the single global one
+  lands at 0.31.
+- Both tuned rules beat the fixed one on test in all 1,000 paired bootstrap resamples. Per-label thresholds add only
+  0.005 over the global one, and that difference is not reliable (95 % CI −0.001 to +0.011).
+- The rare labels gain most from per-label thresholds (+0.046 mean F1 in the tail tier) and also over-fit most: their
+  validation-to-test gap is the largest.
+- The gains have a price. The tuned rules predict about 2.2 labels per comment where the gold average is 1.9, false
+  positives more than double, and comments with a single emotion get worse.
+
+All numbers come from one training run with seed 42.
+
+## What is in this repository
 
 ```
-code/
-├── README.md               this file
-├── requirements.txt
 ├── notebooks/
-│   ├── 01_Midterm_Baselines.ipynb             dataset analysis, 3 models, midterm questions, error analysis
-│   └── 02_Final_RQ1_Threshold_Decoding.ipynb  RQ1: fixed / global / per-label thresholds
-├── configs/                hyperparameters of every experiment (JSON)
-├── splits/                 train / val / test comment ids + SHA-256 of the three CSV files
-├── src/                    empty: all code lives in the notebooks
-└── results/
-    ├── tables/             every result table as CSV
-    ├── figures/            figures of notebook 02
-    ├── predictions/        per-comment probabilities and predictions (CSV, plus one .npz)
-    ├── rq1_thresholds.json frozen thresholds of the three strategies
-    ├── rq1_summary.json    headline numbers of RQ1
-    └── environment.md      hardware, library versions, seeds
+│   ├── 01_Midterm_Baselines.ipynb              dataset analysis, three models, midterm questions, error analysis
+│   └── 02_Final_RQ1_Threshold_Decoding.ipynb   RQ1: fixed, global and per-label thresholds
+├── configs/            hyperparameters of the three models and the RQ1 settings
+├── splits/             train / val / test comment ids and SHA-256 checksums of the CSV files
+├── results/
+│   ├── tables/         result tables as CSV
+│   ├── figures/        figures of notebook 02
+│   ├── rq1_thresholds.json   the frozen thresholds of the three strategies
+│   ├── rq1_summary.json      headline numbers of RQ1
+│   └── environment.md        GPU, library versions, seeds, run times
+└── requirements.txt
 ```
 
-## Data
+The notebooks are committed with their outputs, so you can read every table and plot without running anything.
 
-- Source: the authors' repository <https://github.com/ricardo-tran/ViGoEmotions>, folder `corpus/`
-  (`train.csv`, `val.csv`, `test.csv`, `label_dict.json`). The dataset card is
-  <https://huggingface.co/datasets/uitnlp/vigoemotions>.
-- Licence: non-commercial academic research and education only. Raw comment text must not be redistributed, so the
-  submission contains no dataset file and no comment text, only comment ids, labels and model outputs.
-- You do not have to download anything by hand. If `code/data/` is missing or empty, the first cell of each notebook
-  downloads the four files from the GitHub repository into `code/data/` and checks that the ids match `splits/`.
-- Split: the official split, unchanged (16,531 / 2,066 / 2,067). `splits/*_ids.txt` lists the ids in file order.
-  `splits/SHA256SUMS.txt` holds the checksums of the CSV files as downloaded from GitHub; check them with
-  `cd code/data && sha256sum -c ../splits/SHA256SUMS.txt`.
+### What is not here, and why
+
+| Left out | Reason |
+|---|---|
+| `data/` (the dataset) | The licence forbids redistributing it. The notebooks download it for you. |
+| `runs/` (model weights) | Too large for GitHub (the PhoBERT checkpoint alone is 540 MB). |
+| `results/predictions/` and `results/tables/rq1_audit_*.csv` | They pair comment ids with gold labels, which would rebuild the dataset's labels. Running the notebooks recreates them locally. |
+
+These paths are listed in `.gitignore`.
 
 ## How to run
 
-All paths are relative to this `code/` folder. The notebooks find it on their own.
+You need Python 3 and, for notebook 01, a GPU. A free Colab T4 is enough.
 
 **Google Colab**
 
-1. Upload the unzipped submission folder `62FIT4ATI-CLC02_G02_P02/` anywhere in *My Drive*.
-2. Open `code/notebooks/01_Midterm_Baselines.ipynb` in Colab, choose Runtime → Change runtime type → T4 GPU, then
-   Runtime → Run all. The first cell mounts Drive and looks for `62FIT4ATI-CLC02_G02_P02/code` up to four folders
-   deep.
-3. Open `code/notebooks/02_Final_RQ1_Threshold_Decoding.ipynb` and run all. A CPU runtime is enough.
-
-From the GitHub repository instead, run `!git clone https://github.com/Heal1208/vigoemotions-threshold-decoding`
-and `%cd vigoemotions-threshold-decoding` in the first Colab cell; the notebooks then find the repository root on
-their own.
-
-**Local Jupyter**
-
-```bash
-cd 62FIT4ATI-CLC02_G02_P02/code
-pip install -r requirements.txt
-cd notebooks
-jupyter notebook        # run 01_Midterm_Baselines.ipynb, then 02_Final_RQ1_Threshold_Decoding.ipynb
+```python
+!git clone https://github.com/Heal1208/vigoemotions-threshold-decoding
+%cd vigoemotions-threshold-decoding
+!pip install -q -r requirements.txt
 ```
 
-Run the notebooks in this order. Notebook 02 reads the PhoBERT probabilities that notebook 01 writes to
-`results/predictions/midterm_phobert_{val,test}.csv`. Those two files are already in the submission, so notebook 02
-also runs on its own.
+Then open `notebooks/01_Midterm_Baselines.ipynb`, set the runtime to T4 GPU and run all. After that, run
+`notebooks/02_Final_RQ1_Threshold_Decoding.ipynb`, which needs no GPU.
 
-Notebook 01 trains the three models and saves weights and probabilities in `code/runs/<model>/`. If a run with the
-same configuration is already there, it loads it instead of training again (set `RETRAIN = True` to force training).
-`code/runs/` and `code/data/` are not part of the submission because they hold model weights and raw data.
-A full run from scratch took about 35 minutes on a Colab T4.
+**Locally**
 
-## Which notebook produces which result
+```bash
+git clone https://github.com/Heal1208/vigoemotions-threshold-decoding
+cd vigoemotions-threshold-decoding
+pip install -r requirements.txt
+jupyter notebook notebooks/
+```
 
-Table and figure numbers refer to the final report (`report/62FIT4ATI-CLC02_G02_P02_report.docx`).
+Run notebook 01 before notebook 02. Notebook 02 only reads the PhoBERT probabilities that notebook 01 writes to
+`results/predictions/midterm_phobert_{val,test}.csv`, and those files are not in the repository.
 
-| Report item | Produced by | File |
-|---|---|---|
-| Table 2 (dataset statistics) | 01, Sections 2.1 and 2.4 | printed in the notebook |
-| Table 3 (training configuration) | 01, Section 1 and Section 4 | `configs/tfidf_lr.json`, `configs/bilstm.json`, `configs/phobert.json` |
-| Table 4 (baseline recap) | 01, Section 5 | `results/tables/midterm_main_metrics.csv` |
-| Figure 1 (label frequency by tier) | 01, Section 2.3 | printed in the notebook |
-| Figure 2 (label correlation) | 01, Section 2.5 | printed in the notebook |
-| Figure 3 (uniform threshold sweep) | 01, Section 6, Q5 | printed in the notebook |
-| Figure 8 (gold × predicted labels) | 01, Section 7.5 | printed in the notebook |
-| Table 5 (RQ1 main results) | 02, Section 5 | `results/tables/rq1_table_main_metrics.csv` |
-| Table 6 (validation-to-test gap, bootstrap) | 02, Sections 5 and 5.1 | `results/tables/rq1_table_val_test_gap.csv`, `rq1_table_bootstrap_ci.csv` |
-| Table 7 (frequency tiers) | 02, Section 7 | `results/tables/rq1_table_tiers.csv` |
-| Table 8 (errors fixed and added) | 02, Section 10.1 | `results/tables/rq1_table_error_transitions.csv` |
-| Tables 9 and 10 (error audit) | 02, Section 10.2 | `results/tables/rq1_audit_fn.csv`, `rq1_audit_fp.csv` |
-| Figure 4 (threshold profile) | 02, Section 9 | `results/figures/rq1_threshold_profile.png` |
-| Figure 5 (per-label F1 by strategy) | 02, Section 6 | `results/figures/rq1_per_label_f1.png` |
-| Figure 6 (tiers) | 02, Section 7 | `results/figures/rq1_tiers.png` |
-| Figure 7 (label cardinality) | 02, Section 8 | `results/figures/rq1_cardinality.png` |
+Notes:
 
-Other files in `results/`:
+- Every path is relative to the repository root. The first cell of each notebook finds the root by itself, whether
+  you start Jupyter in the root or in `notebooks/`.
+- If `data/` is empty, the first cell downloads `train.csv`, `val.csv`, `test.csv` and `label_dict.json` from the
+  authors' repository and checks that the ids match `splits/`. To check the files byte for byte:
+  `cd data && sha256sum -c ../splits/SHA256SUMS.txt`.
+- Notebook 01 saves each trained model in `runs/<model>/`. On the next run it loads a saved model with the same
+  configuration instead of training again; set `RETRAIN = True` to force training. A full run from scratch took about
+  35 minutes on a Colab T4 (PhoBERT alone about 28 minutes for two learning rates).
+- The notebooks print comment ids, never comment text, unless you set `SHOW_COMMENT_TEXT = True`. Leave it off in
+  anything you share.
 
-- `predictions/midterm_{tfidf_lr,bilstm,phobert}_{val,test}.csv`: one row per comment with `sample_id`,
-  `true_label_vector`, `probability_vector` and `pred_fixed` (τ = 0.5).
-- `predictions/rq1_predictions_{val,test}.csv` and `rq1_predictions.npz`: `sample_id`, `true_label_vector`,
-  `probability_vector`, `pred_fixed`, `pred_global`, `pred_per_label`, `label_cardinality`.
-- `tables/midterm_per_label_f1.csv`, `tables/rq1_table_per_label_f1.csv`, `rq1_table_cardinality.csv`,
-  `rq1_table_threshold_profile.csv`, `rq1_table_confusions.csv`, `rq1_table_pair_recall.csv`,
-  `rq1_audit_high_cardinality.csv`.
-- `figures/rq1_f1_vs_threshold_per_label.png`: validation F1 against the threshold for each label.
+## Method in brief
 
-Vectors are JSON lists of 28 values in the label order of `label_dict.json`.
+- **Split:** the official one (16,531 / 2,066 / 2,067), unchanged.
+- **Text pipeline** (same input for all models): Unicode NFC, emoji turned into English names with `emoji.demojize`,
+  letters repeated three or more times cut to one and symbols cut to two, word segmentation with `underthesea`.
+  TF-IDF and the BiLSTM lowercase the text; PhoBERT keeps case. Teencode is left as it is.
+- **Selection:** hyperparameters and epochs chosen on validation Macro-F1 at τ = 0.5. The test split is scored once
+  per model and once per decoding rule.
+- **Thresholds:** searched on 0.05, 0.06, …, 0.95 on validation, written to `results/rq1_thresholds.json`, then
+  applied to test.
+- **Tiers:** the 28 labels ranked by training count; head = top 9, mid = next 10, tail = last 9. Fixed before any
+  evaluation.
+- **Checkpoint:** `vinai/phobert-base-v2`. Exact settings are in `configs/`, library versions in
+  `results/environment.md`.
 
-The public GitHub repository leaves out `results/predictions/` and the three `results/tables/rq1_audit_*.csv`
-files. They pair comment ids with gold labels, and the dataset licence forbids redistributing the dataset. They are
-part of the course submission, and running the two notebooks recreates them.
+## Where each result comes from
 
-## Reproducibility notes
+| File | Produced by |
+|---|---|
+| `results/tables/midterm_main_metrics.csv`, `midterm_per_label_f1.csv` | notebook 01, Section 5 |
+| `results/tables/rq1_table_main_metrics.csv`, `rq1_table_val_test_gap.csv` | notebook 02, Section 5 |
+| `results/tables/rq1_table_bootstrap_ci.csv` | notebook 02, Section 5.1 |
+| `results/tables/rq1_table_per_label_f1.csv`, `figures/rq1_per_label_f1.png` | notebook 02, Section 6 |
+| `results/tables/rq1_table_tiers.csv`, `figures/rq1_tiers.png` | notebook 02, Section 7 |
+| `results/tables/rq1_table_cardinality.csv`, `figures/rq1_cardinality.png` | notebook 02, Section 8 |
+| `results/tables/rq1_table_threshold_profile.csv`, `figures/rq1_threshold_profile.png`, `figures/rq1_f1_vs_threshold_per_label.png` | notebook 02, Section 9 |
+| `results/tables/rq1_table_error_transitions.csv`, `rq1_table_confusions.csv`, `rq1_table_pair_recall.csv` | notebook 02, Section 10 |
 
-- Seed 42 for Python, NumPy, PyTorch and CUDA; deterministic cuDNN. Details in `results/environment.md`.
-- Model selection and every threshold use the validation split only. The test split is scored once per model and
-  once per decoding strategy.
-- Text pipeline: Unicode NFC, emoji to English names (`emoji.demojize`), letters repeated 3+ times cut to one and
-  symbols cut to two, word segmentation with `underthesea.word_tokenize`. TF-IDF and BiLSTM lowercase the text;
-  PhoBERT keeps case. Teencode is not normalised.
-- Pretrained checkpoint: `vinai/phobert-base-v2`.
-- Comment text is never printed or saved unless `SHOW_COMMENT_TEXT = True` in a notebook. Keep it `False`.
+The dataset analysis, the midterm plots and the confusion matrices are drawn inside notebook 01.
+
+## Data and licence
+
+The data come from the authors' repository, folder `corpus/`. Their licence says the dataset may be used only for
+non-profit research and education, must not be used in commercial systems and must not be redistributed, while
+summaries and analyses may be published if the original data cannot be rebuilt from them. This repository follows
+those terms: it holds code, comment ids, aggregate results and figures, and no comment text or per-comment labels.
+
+If you use the dataset, cite the authors:
+
+> H. Q. Tran, N. T. Pham, S. T. Luu, and K. V. Nguyen, "ViGoEmotions: A benchmark dataset for fine-grained emotion
+> detection on Vietnamese texts," in *Proc. 19th Conf. Eur. Chapter Assoc. Comput. Linguistics (EACL)*, vol. 1,
+> 2026, pp. 2805–2831, doi: 10.18653/v1/2026.eacl-long.129.
