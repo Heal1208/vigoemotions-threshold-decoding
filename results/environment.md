@@ -44,7 +44,7 @@ Each model was trained once with this seed. We did not run extra seeds.
 
 | Step | Time |
 |---|---|
-| Text normalisation + word segmentation (all splits) | 46 s |
+| Text normalisation + word segmentation (all splits) | 47 s |
 | TF-IDF + OvR LR, selected configuration / whole grid of 8 | 0.6 min / 3.5 min |
 | BiLSTM, 17 epochs (best epoch 14) | 2.2 min |
 | PhoBERT-base-v2, selected run (lr 3e-5) / both learning rates | 13.7 min / 27.9 min |

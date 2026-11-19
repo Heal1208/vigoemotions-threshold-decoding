@@ -44,7 +44,7 @@ What we found:
   0.005 over the global one, and that difference is not reliable (95 % CI −0.001 to +0.011).
 - The rare labels gain most from per-label thresholds (+0.046 mean F1 in the tail tier) and also over-fit most: their
   validation-to-test gap is the largest.
-- The gains have a price. The tuned rules predict about 2.2 labels per comment where the gold average is 1.9, false
+- The gains have a price. The tuned rules predict 2.1 to 2.3 labels per comment where the gold average is 1.9, false
   positives more than double, and comments with a single emotion get worse.
 
 All numbers come from one training run with seed 42.
