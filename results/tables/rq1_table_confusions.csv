@@ -1,0 +1,16 @@
+,gold missed,predicted instead,fixed,per_label
+0,anger,disapproval,3,25
+1,anger,annoyance,20,21
+2,disgust,disapproval,2,20
+3,amusement,annoyance,12,20
+4,disgust,annoyance,20,19
+5,sadness,annoyance,10,18
+6,neutral,annoyance,7,16
+7,annoyance,neutral,10,16
+8,anger,disappointment,10,15
+9,annoyance,disappointment,14,13
+10,disappointment,annoyance,11,12
+11,disgust,disappointment,5,12
+12,disgust,sadness,10,12
+13,disappointment,disapproval,2,12
+14,annoyance,sadness,21,12

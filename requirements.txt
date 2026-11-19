@@ -1,0 +1,15 @@
+# Versions printed by notebooks/01_Midterm_Baselines.ipynb (Section 1) on Google Colab, Tesla T4.
+# On Colab, torch is already installed with CUDA; install the rest with: pip install -r requirements.txt
+torch==2.14.1
+transformers==5.22.1
+scikit-learn==1.6.1
+scipy==1.16.3
+numpy==2.4.6
+pandas==2.2.3
+underthesea==9.5.0
+emoji==2.16.0
+# Not pinned: versions were not recorded by the notebooks
+matplotlib
+joblib
+tqdm
+ipython

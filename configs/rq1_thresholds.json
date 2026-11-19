@@ -1,0 +1,22 @@
+{
+  "experiment": "RQ1 threshold decoding",
+  "notebook": "notebooks/02_Final_RQ1_Threshold_Decoding.ipynb",
+  "backbone": "midterm PhoBERT-base-v2 (configs/phobert.json), not retrained",
+  "probabilities": "results/predictions/midterm_phobert_{val,test}.csv",
+  "strategies": {
+    "fixed": "p >= 0.5 for every label",
+    "global": "p >= tau*, tau* = argmax validation Macro-F1",
+    "per_label": "p >= tau_c*, tau_c* = argmax validation F1 of label c"
+  },
+  "threshold_grid": {
+    "start": 0.05,
+    "stop": 0.95,
+    "step": 0.01,
+    "tie_break": "lowest threshold"
+  },
+  "fitted_on": "validation only; thresholds frozen in results/rq1_thresholds.json before test",
+  "tiers": "28 labels ranked by train count: head = top 9, mid = next 10, tail = last 9",
+  "bootstrap_resamples": 1000,
+  "audit_samples_per_error_type": 20,
+  "seed": 42
+}

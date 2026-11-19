@@ -1,0 +1,28 @@
+{
+  "model": "bilstm",
+  "description": "2-layer BiLSTM with max-pooling, randomly initialised 300-d embeddings",
+  "notebook": "notebooks/01_Midterm_Baselines.ipynb",
+  "seed": 42,
+  "decision_threshold": 0.5,
+  "search_space_and_fixed_settings": {
+    "emb_dim": 300,
+    "hidden": 256,
+    "layers": 2,
+    "dropout": 0.3,
+    "lr": 0.001,
+    "batch_size": 64,
+    "max_epochs": 20,
+    "patience": 3,
+    "min_freq": 2,
+    "len_percentile": 99,
+    "grad_clip": 1.0
+  },
+  "selected_on_validation": {
+    "lr": 0.001,
+    "best_epoch": 14,
+    "max_len": 77,
+    "vocab_size": 7325
+  },
+  "selected_val_macro_f1": 0.4934,
+  "n_params": 4931608
+}

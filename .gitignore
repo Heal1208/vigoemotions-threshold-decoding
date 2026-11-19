@@ -1,0 +1,19 @@
+# Raw dataset: downloaded by the notebooks, must not be redistributed
+data/
+# Model weights written by notebook 01
+runs/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.joblib
+# Files that pair comment ids with gold labels (dataset licence)
+results/predictions/
+results/tables/rq1_audit_*.csv
+# Local clutter and secrets
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.env
+.venv/
+.DS_Store

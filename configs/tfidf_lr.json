@@ -1,0 +1,37 @@
+{
+  "model": "tfidf_lr",
+  "description": "TF-IDF (word 1-2 grams + char_wb 2-5 grams) + One-vs-Rest logistic regression",
+  "notebook": "notebooks/01_Midterm_Baselines.ipynb",
+  "seed": 42,
+  "decision_threshold": 0.5,
+  "search_space_and_fixed_settings": {
+    "word_ngram": [
+      1,
+      2
+    ],
+    "char_ngram": [
+      2,
+      5
+    ],
+    "min_df": 2,
+    "sublinear_tf": true,
+    "C_grid": [
+      0.5,
+      1,
+      4,
+      10
+    ],
+    "class_weight_grid": [
+      null,
+      "balanced"
+    ],
+    "solver": "liblinear",
+    "max_iter": 2000
+  },
+  "selected_on_validation": {
+    "C": 4,
+    "class_weight": "balanced"
+  },
+  "selected_val_macro_f1": 0.5298,
+  "n_params": 2370340
+}

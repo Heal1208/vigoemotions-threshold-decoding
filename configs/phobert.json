@@ -1,0 +1,31 @@
+{
+  "model": "phobert",
+  "description": "PhoBERT-base-v2 fine-tuned with an independent sigmoid head and BCE loss",
+  "notebook": "notebooks/01_Midterm_Baselines.ipynb",
+  "seed": 42,
+  "decision_threshold": 0.5,
+  "search_space_and_fixed_settings": {
+    "checkpoint": "vinai/phobert-base-v2",
+    "lr_grid": [
+      2e-05,
+      3e-05
+    ],
+    "batch_size": 32,
+    "max_epochs": 10,
+    "patience": 2,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "len_percentile": 99,
+    "max_len_cap": 256,
+    "max_len": 96
+  },
+  "selected_on_validation": {
+    "lr": 3e-05,
+    "best_epoch": 10,
+    "max_len": 96,
+    "checkpoint": "vinai/phobert-base-v2"
+  },
+  "selected_val_macro_f1": 0.5563,
+  "n_params": 135019804
+}
